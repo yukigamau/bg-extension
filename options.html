@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>SiteDrop — Settings</title>
+  <style>
+    :root {
+      --bg: #0d0d10;
+      --surface: #16161c;
+      --card: #1c1c24;
+      --border: #2a2a36;
+      --accent: #66ccff;
+      --accent2: #4da6ff;
+      --text: #e8e6f0;
+      --muted: #6b6880;
+      --danger: #e05c5c;
+      --danger-bg: rgba(224,92,92,0.12);
+      --success: #6ee7b7;
+      --radius: 10px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-size: 14px; min-height: 100vh; }
+    .layout { display: flex; min-height: 100vh; }
+
+    /* Sidebar */
+    .sidebar { width: 220px; background: var(--surface); border-right: 1px solid var(--border); position: fixed; top: 0; bottom: 0; left: 0; display: flex; flex-direction: column; }
+    .brand { padding: 0 20px 24px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+    .brand-logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 16px; letter-spacing: -0.4px; }
+    .brand-icon { width: 28px; height: 28px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+    .brand-sub { font-size: 11px; color: var(--muted); margin-top: 3px; padding-left: 38px; }
+    .nav { flex: 1; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 10px 20px; cursor: pointer; color: var(--muted); font-size: 13px; font-weight: 500; border-left: 3px solid transparent; transition: all 0.15s; }
+    .nav-item:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+    .nav-item.active { color: var(--text); border-left-color: var(--accent); background: rgba(102,204,255,0.08); }
+    .nav-icon { font-size: 15px; width: 18px; text-align: center; }
+
+    /* Language switcher in sidebar */
+    .sidebar-footer { padding: 16px 20px; border-top: 1px solid var(--border); }
+    .lang-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.7px; color: var(--muted); margin-bottom: 6px; }
+    .lang-select { width: 100%; background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; color: var(--text); font-size: 12px; outline: none; cursor: pointer; }
+    .lang-select:focus { border-color: var(--accent); }
+    .lang-select option { background: var(--surface); }
+
+    /* Main */
+    .main { margin-left: 220px; flex: 1; padding: 32px; display: flex; justify-content: center; }
+    .page { display: none; width: 100%; max-width: 860px; }
+    .page.active { display: block; }
+    .page-title { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 6px; }
+    .page-sub { color: var(--muted); font-size: 13px; margin-bottom: 28px; }
+
+    /* Cards */
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; }
+    .card-title { font-size: 12px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 14px; font-weight: 600; }
+
+    /* Buttons */
+    .btn { padding: 6px 12px; border-radius: 7px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 12px; cursor: pointer; transition: all 0.15s; font-weight: 500; }
+    .btn:hover { background: var(--border); }
+    .btn.danger { background: var(--danger-bg); border-color: var(--danger); color: var(--danger); }
+    .btn.danger:hover { background: var(--danger); color: #fff; }
+    .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+    .btn.primary:hover { background: var(--accent2); border-color: var(--accent2); }
+    .btn-row { display: flex; gap: 8px; }
+
+    /* Upload */
+    .upload-zone { border: 2px dashed var(--border); border-radius: var(--radius); padding: 32px; text-align: center; cursor: pointer; transition: all 0.2s; margin-bottom: 20px; }
+    .upload-zone:hover, .upload-zone.drag-over { border-color: var(--accent); background: rgba(102,204,255,0.06); }
+    .upload-zone input { display: none; }
+    .upload-icon { font-size: 28px; margin-bottom: 10px; }
+    .upload-title { font-weight: 600; margin-bottom: 4px; }
+    .upload-hint { color: var(--muted); font-size: 12px; }
+
+    /* Photo list */
+    .photo-list { display: flex; flex-direction: column; gap: 10px; }
+    .photo-row { display: flex; align-items: center; gap: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 14px; }
+    .photo-row img { width: 52px; height: 52px; object-fit: cover; border-radius: 6px; flex-shrink: 0; }
+    .photo-info { flex: 1; min-width: 0; }
+    .photo-name { font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .photo-usage { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .photo-usage.unused { color: var(--danger); }
+    .photo-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+    /* Sites table */
+    .sites-table { width: 100%; border-collapse: collapse; }
+    .sites-table th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.7px; color: var(--muted); padding: 0 0 10px; font-weight: 600; border-bottom: 1px solid var(--border); }
+    .sites-table th:last-child { text-align: right; }
+    .sites-table td { padding: 12px 0; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .sites-table tr:last-child td { border-bottom: none; }
+    .site-cell { display: flex; align-items: center; gap: 8px; }
+    .site-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+    .site-domain { font-weight: 600; font-size: 13px; color: var(--accent); }
+    .photo-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(102,204,255,0.18); border: 1px solid rgba(102,204,255,0.35); border-radius: 6px; padding: 3px 8px; font-size: 11px; color: var(--accent2); }
+    .photo-badge img { width: 16px; height: 16px; border-radius: 3px; object-fit: cover; }
+    .actions-cell { text-align: right; }
+    .add-site-row { display: flex; gap: 10px; margin-top: 16px; }
+    input[type="text"], select { background: var(--surface); border: 1px solid var(--border); border-radius: 7px; padding: 8px 12px; color: var(--text); font-size: 13px; outline: none; transition: border-color 0.15s; }
+    input[type="text"]:focus, select:focus { border-color: var(--accent); }
+    input[type="text"] { flex: 1; }
+    select option { background: var(--surface); }
+
+    /* ── Covers tab ─────────────────────────────────────────────────── */
+    .covers-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .covers-site-select { display: flex; align-items: center; gap: 10px; }
+    .covers-site-select label { font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.7px; }
+
+    /* ── Blur controls ────────────────────────────────────────────── */
+    .blur-toggle-row {
+      display: flex; align-items: center; gap: 14px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 14px 18px;
+      margin-bottom: 12px;
+    }
+    .blur-toggle-row .label { font-weight: 600; font-size: 13px; flex: 1; }
+    .blur-toggle-row .sublabel { font-size: 11px; color: var(--muted); }
+
+    .toggle-switch {
+      position: relative; width: 40px; height: 22px;
+      flex-shrink: 0; cursor: pointer;
+    }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute; inset: 0;
+      background: var(--border); border-radius: 22px;
+      transition: background 0.2s;
+    }
+    .toggle-slider::before {
+      content: ""; position: absolute;
+      width: 16px; height: 16px; left: 3px; bottom: 3px;
+      background: var(--muted); border-radius: 50%;
+      transition: all 0.2s;
+    }
+    .toggle-switch input:checked + .toggle-slider { background: var(--accent); }
+    .toggle-switch input:checked + .toggle-slider::before {
+      background: #fff; transform: translateX(18px);
+    }
+
+    .blur-radius-row {
+      display: none; align-items: center; gap: 14px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-top: none; border-radius: 0 0 var(--radius) var(--radius);
+      padding: 8px 18px 14px; margin-top: -12px; margin-bottom: 20px;
+    }
+    .blur-radius-row.visible { display: flex; }
+    .blur-radius-row .label { font-size: 12px; color: var(--muted); flex: 1; }
+
+    .global-opacity-row {
+      display: flex; align-items: center; gap: 14px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 14px 18px;
+      margin-bottom: 20px;
+    }
+    .global-opacity-row .label { font-weight: 600; font-size: 13px; flex: 1; }
+    .global-opacity-row .sublabel { font-size: 11px; color: var(--muted); }
+
+    .cover-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .cover-row {
+      display: flex; align-items: center; gap: 14px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 12px 16px;
+      transition: border-color 0.15s;
+    }
+    .cover-row:hover { border-color: var(--accent); }
+
+    .cover-tag {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.5px;
+      background: rgba(102,204,255,0.2); color: var(--accent);
+      border-radius: 4px; padding: 2px 6px;
+      min-width: 34px; text-align: center; flex-shrink: 0;
+    }
+
+    .cover-desc { flex: 1; min-width: 0; }
+    .cover-selector { font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .cover-uid { font-size: 10px; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .opacity-control { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+    .blur-btn {
+      font-size: 11px; padding: 3px 7px;
+      background: transparent; border: 1px solid var(--border);
+      border-radius: 5px; color: var(--muted); cursor: pointer;
+      transition: all 0.15s; flex-shrink: 0;
+      display: flex; align-items: center; gap: 3px;
+    }
+    .blur-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .blur-btn.active {
+      background: rgba(102,204,255,0.15);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 120px; height: 4px;
+      border-radius: 2px;
+      background: var(--border);
+      outline: none; cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    input[type="range"]::-webkit-slider-thumb:hover { background: var(--accent2); }
+
+    .opacity-value {
+      font-size: 12px; font-weight: 700; color: var(--accent);
+      min-width: 34px; text-align: right;
+    }
+
+    .reset-btn {
+      font-size: 11px; padding: 3px 8px;
+      background: transparent; border: 1px solid var(--border);
+      border-radius: 5px; color: var(--muted); cursor: pointer;
+      transition: all 0.15s; flex-shrink: 0;
+    }
+    .reset-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    .covers-empty { text-align: center; padding: 40px 20px; color: var(--muted); }
+    .covers-empty-icon { font-size: 32px; margin-bottom: 12px; }
+    .covers-empty p { font-size: 13px; line-height: 1.6; }
+
+    .scan-btn-row { display: flex; gap: 8px; margin-bottom: 20px; }
+
+    .covers-info-bar {
+      font-size: 12px; color: var(--muted);
+      background: rgba(102,204,255,0.07);
+      border: 1px solid rgba(102,204,255,0.18);
+      border-radius: 8px; padding: 10px 14px;
+      margin-bottom: 16px; line-height: 1.5;
+    }
+
+    /* Cleanup */
+    .cleanup-info { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 14px; }
+    .cleanup-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+    .cleanup-item { display: flex; align-items: center; gap: 10px; background: var(--danger-bg); border: 1px solid rgba(224,92,92,0.3); border-radius: 7px; padding: 8px 12px; }
+    .cleanup-item img { width: 36px; height: 36px; object-fit: cover; border-radius: 5px; }
+    .cleanup-name { font-size: 12px; font-weight: 600; }
+    .cleanup-reason { font-size: 11px; color: var(--danger); }
+
+    /* Empty */
+    .empty-state { text-align: center; padding: 32px; color: var(--muted); }
+    .empty-state-icon { font-size: 32px; margin-bottom: 10px; }
+
+    /* Toast */
+    .toast { position: fixed; bottom: 24px; right: 24px; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 18px; font-size: 13px; font-weight: 500; opacity: 0; transform: translateY(8px); transition: all 0.25s; z-index: 100; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.success { border-color: var(--success); color: var(--success); }
+    .toast.error { border-color: var(--danger); color: var(--danger); }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <nav class="sidebar">
+    <div class="brand">
+      <div class="brand-logo"><div class="brand-icon">🖼</div>SiteDrop</div>
+      <div class="brand-sub">Background Photos</div>
+    </div>
+    <div class="nav">
+      <div class="nav-item active" data-page="library" data-i18n="nav-library"><span class="nav-icon">🗂</span> Photo Library</div>
+      <div class="nav-item" data-page="sites" data-i18n="nav-sites"><span class="nav-icon">🌐</span> Sites</div>
+      <div class="nav-item" data-page="covers" data-i18n="nav-covers"><span class="nav-icon">🎚</span> Cover Opacity</div>
+      <div class="nav-item" data-page="cleanup" data-i18n="nav-cleanup"><span class="nav-icon">🧹</span> Cleanup</div>
+    </div>
+    <div class="sidebar-footer">
+      <div class="lang-label" data-i18n="lang-label">Language</div>
+      <select class="lang-select" id="langSelect">
+        <option value="en" data-i18n="lang-en">English</option>
+        <option value="zh" data-i18n="lang-zh">中文 (Chinese)</option>
+      </select>
+    </div>
+  </nav>
+
+  <main class="main">
+
+    <!-- Photo Library -->
+    <div class="page active" id="page-library">
+      <div class="page-title" data-i18n="lib-title">Photo Library</div>
+      <div class="page-sub" data-i18n="lib-sub">All photos stored by SiteDrop. Add new ones or delete ones you no longer need.</div>
+      <div class="upload-zone" id="uploadZone">
+        <input type="file" id="fileInput" accept="image/*" multiple />
+        <div class="upload-icon">⬆️</div>
+        <div class="upload-title" data-i18n="upload-title">Drop images here, or click to browse</div>
+        <div class="upload-hint" data-i18n="upload-hint">PNG, JPG, WEBP — stored locally in your browser</div>
+      </div>
+      <div id="photoListContainer">
+        <div class="card-title" data-i18n="stored-photos">Stored photos</div>
+        <div class="photo-list" id="photoList"></div>
+        <div class="empty-state" id="emptyLibrary" style="display:none">
+          <div class="empty-state-icon">📷</div><div data-i18n="no-photos-yet">No photos yet. Upload some above.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sites -->
+    <div class="page" id="page-sites">
+      <div class="page-title" data-i18n="sites-title">Sites</div>
+      <div class="page-sub" data-i18n="sites-sub">Assign a background photo to any website.</div>
+      <div class="card">
+        <table class="sites-table" id="sitesTable">
+          <thead><tr><th data-i18n="col-domain">Domain</th><th data-i18n="col-bg">Background</th><th data-i18n="col-actions">Actions</th></tr></thead>
+          <tbody id="sitesBody"></tbody>
+        </table>
+        <div class="empty-state" id="emptySites" style="display:none">
+          <div class="empty-state-icon">🌐</div><div data-i18n="no-sites">No sites configured yet.</div>
+        </div>
+        <div class="add-site-row">
+          <input type="text" id="newSiteInput" data-i18n-placeholder="add-site-placeholder" placeholder="e.g. claude.ai" />
+          <select id="newSitePhoto"></select>
+          <button class="btn primary" id="addSiteBtn" data-i18n="btn-add-site">Add site</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cover Opacity -->
+    <div class="page" id="page-covers">
+      <div class="page-title" data-i18n="covers-title">Cover Opacity</div>
+      <div class="page-sub" data-i18n="covers-sub">Control how transparent each covering element is. Lower = more background visible.</div>
+
+      <div class="covers-info-bar" data-i18n-html="covers-info">
+        💡 Open a site that has a background photo, then come back here and click <strong>Scan active tab</strong> to see its covering elements. Changes apply live.
+      </div>
+
+      <div class="scan-btn-row">
+        <select id="coverSiteSelect" style="min-width:200px"></select>
+        <button class="btn primary" id="scanTabBtn" data-i18n="btn-scan">Scan active tab</button>
+        <button class="btn" id="saveCoversBtn" data-i18n="btn-save-all">Save all</button>
+        <button class="btn" id="resetAllBtn" style="color:var(--danger);border-color:rgba(224,92,92,0.3)" data-i18n="btn-reset-all" data-i18n-title="btn-reset-all">Reset all to defaults</button>
+      </div>
+
+      <!-- Global blur toggle -->
+      <div class="blur-toggle-row" id="globalBlurRow">
+        <div>
+          <div class="label" data-i18n="blur-mode">Blur (Glassmorphism)</div>
+          <div class="sublabel" data-i18n="blur-mode-sub">Use backdrop-filter blur instead of transparency</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="globalBlurToggle" />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="blur-radius-row" id="globalBlurRadiusRow">
+        <div class="label" data-i18n="blur-radius">Blur radius (px)</div>
+        <div class="opacity-control">
+          <input type="range" id="globalBlurSlider" min="2" max="30" value="10" />
+          <span class="opacity-value" id="globalBlurValue">10px</span>
+        </div>
+      </div>
+
+      <div class="global-opacity-row" id="globalOpacityRow">
+        <div>
+          <div class="label" data-i18n="default-opacity">Default opacity</div>
+          <div class="sublabel" data-i18n="default-opacity-sub">Applied to all covers without a custom value</div>
+        </div>
+        <div class="opacity-control">
+          <input type="range" id="globalSlider" min="0" max="100" value="75" />
+          <span class="opacity-value" id="globalValue">75%</span>
+        </div>
+      </div>
+
+      <!-- Background brightness -->
+      <div class="global-opacity-row" id="brightnessRow">
+        <div>
+          <div class="label" data-i18n="bg-brightness">Background brightness</div>
+          <div class="sublabel" data-i18n="bg-brightness-sub">Lower = darker overlay, text becomes easier to read</div>
+        </div>
+        <div class="opacity-control">
+          <input type="range" id="brightnessSlider" min="0" max="100" value="100" />
+          <span class="opacity-value" id="brightnessValue">100%</span>
+        </div>
+      </div>
+
+      <div class="card-title" data-i18n="individual-covers">Individual covers</div>
+      <div class="cover-list" id="coverList"></div>
+      <!-- Template for cover row blur radius (hidden, cloned by JS) -->
+      <div id="coverBlurRadiusTemplate" style="display:none">
+        <div class="blur-radius-row" style="margin-bottom:0">
+          <div class="label" data-i18n="blur-radius">Blur radius (px)</div>
+          <div class="opacity-control">
+            <input type="range" min="2" max="30" value="10" class="cover-blur-slider" />
+            <span class="opacity-value cover-blur-value">10px</span>
+          </div>
+        </div>
+      </div>
+      <div class="covers-empty" id="coversEmpty">
+        <div class="covers-empty-icon">🎚</div>
+        <p data-i18n-html="no-covers">No covers scanned yet.<br data-i18n-hidden />Select a site and click <strong>Scan active tab</strong>.</p>
+      </div>
+    </div>
+
+    <!-- Cleanup -->
+    <div class="page" id="page-cleanup">
+      <div class="page-title" data-i18n="cleanup-title">Cleanup</div>
+      <div class="page-sub" data-i18n="cleanup-sub">Find and remove photos that aren't assigned to any site.</div>
+      <div class="card">
+        <div class="cleanup-info" id="cleanupInfo">Scanning your library for unused photos…</div>
+        <div class="cleanup-list" id="cleanupList"></div>
+        <div class="btn-row">
+          <button class="btn" id="rescanBtn" data-i18n="btn-rescan">Rescan</button>
+          <button class="btn danger" id="removeUnusedBtn" style="display:none" data-i18n="btn-remove-unused">Remove all unused photos</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+<script src="i18n.js"></script>
+<script src="options.js"></script>
+</body>
+</html>
