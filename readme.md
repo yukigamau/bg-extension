@@ -47,8 +47,8 @@ Yes, this pulgin uses AI.
 1. Download or clone this repository.
    下载或克隆本仓库。
 
-2. Open Chrome and go to `chrome://extensions`.
-   打开 Chrome，访问 `chrome://extensions`。
+2. Open Chrome and go to `chrome://extensions`, or edge [Microsoft Edge extension](https://microsoftedge.microsoft.com/addons/Microsoft-Edge-Extensions-Home)
+   打开 Chrome，访问 `chrome://extensions`，或者[Microsoft Edge 加载项](https://microsoftedge.microsoft.com/addons/Microsoft-Edge-Extensions-Home)
 
 3. Enable **Developer mode** (toggle in top-right).
    开启**开发者模式**（右上角开关）。

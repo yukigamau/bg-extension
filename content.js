@@ -71,7 +71,11 @@
 
   // ── Background application ───────────────────────────────────────────────
 
+  let _currentMO = null; // Track current MutationObserver for cleanup
+
   function applyBackground(dataUrl, siteSettings) {
+    // Disconnect previous MutationObserver to avoid duplicates
+    if (_currentMO) { _currentMO.disconnect(); _currentMO = null; }
     const globalOpacity = (siteSettings.global !== undefined) ? siteSettings.global : 0.75;
     const overrides     = siteSettings.overrides || {};
     const useBlur       = siteSettings.useBlur || false;
@@ -200,9 +204,32 @@
     }
     setTimeout(processCovers, 800);
     setTimeout(processCovers, 2500);
+
+    // ── MutationObserver: catch dynamically added overlays (e.g. Bing search results) ──
+    let moTimer = null;
+    _currentMO = new MutationObserver(() => {
+      if (moTimer) clearTimeout(moTimer);
+      moTimer = setTimeout(() => {
+        processCovers();
+        moTimer = null;
+      }, 300);
+    });
+    if (document.body) {
+      _currentMO.observe(document.body, { childList: true, subtree: true });
+    } else {
+      const onBodyReady = () => {
+        _currentMO.observe(document.body, { childList: true, subtree: true });
+      };
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", onBodyReady);
+      } else {
+        onBodyReady();
+      }
+    }
   }
 
   function removeBackground() {
+    if (_currentMO) { _currentMO.disconnect(); _currentMO = null; }
     const style = document.getElementById("__sitedrop_style__");
     if (style) style.remove();
     const dimEl = document.getElementById("__sitedrop_dim__");
